@@ -44,3 +44,17 @@ func (n *Node) handleConnection(conn net.Conn) {
 	message := string(buffer[:nBytes])
 	fmt.Printf("Node %s: received message: %s\n", n.ID, message)
 }
+
+func (n *Node) SendMessage(peer net.Addr, message string) error {
+	conn, err := net.Dial(peer.Network(), peer.String())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	_, err = conn.Write([]byte(message))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Node %s: sent message to %s: %s\n", n.ID, peer, message)
+	return nil
+}
