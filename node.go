@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 type Node struct {
@@ -57,4 +58,23 @@ func (n *Node) SendMessage(peer net.Addr, message string) error {
 	}
 	fmt.Printf("Node %s: sent message to %s: %s\n", n.ID, peer, message)
 	return nil
+}
+
+func (n *Node) Gossip() {
+	for {
+		time.Sleep(3 * time.Second)
+
+		if len(n.Peers) == 0 {
+			continue
+		}
+
+		message := fmt.Sprintf("Gossip from node %s", n.ID)
+
+		for _, peer := range n.Peers {
+			err := n.SendMessage(peer, message)
+			if err != nil {
+				fmt.Printf("Node %s: error sending gossip to %s: %v\n", n.ID, peer, err)
+			}
+		}
+	}
 }
