@@ -89,6 +89,46 @@ func (n *Node) handleConnection(conn net.Conn) {
 		return
 	}
 
+}
+
+func (n *Node) SendMessage(peer net.Addr, message string) error {
+	conn, err := net.Dial(peer.Network(), peer.String())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	_, err = conn.Write([]byte(message))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Node %s: sent message to %s: %s\n", n.ID, peer, message)
+	return nil
+}
+
+func (n *Node) JoinNetwork(bootstrap string) {
+	joinMessage := fmt.Sprintf("JOIN %s", n.Address)
+	peer := Peer{
+		"tcp",
+		bootstrap,
+	}
+	conn, err := net.Dial(peer.Network(), peer.String())
+	if err != nil {
+		fmt.Printf("Node %s: error joining network via %s: %v\n", n.ID, bootstrap, err)
+		return
+	}
+	defer conn.Close()
+	_, err = conn.Write([]byte(joinMessage))
+
+	buffer := make([]byte, 1024)
+	nBytes, err := conn.Read(buffer)
+
+	if err != nil {
+		fmt.Printf("Node %s: error reading data: %v\n", n.ID, err)
+		return
+	}
+
+	message := string(buffer[:nBytes])
+
 	//handle peers list update
 	if strings.HasPrefix(message, "PEERS") {
 		parts := strings.Split(message, " ")
@@ -105,20 +145,6 @@ func (n *Node) handleConnection(conn net.Conn) {
 			maps.Copy(n.Peers, newPeerList)
 		}
 	}
-}
-
-func (n *Node) SendMessage(peer net.Addr, message string) error {
-	conn, err := net.Dial(peer.Network(), peer.String())
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Node %s: sent message to %s: %s\n", n.ID, peer, message)
-	return nil
 }
 
 func (n *Node) Gossip() {
