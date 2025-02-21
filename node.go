@@ -9,7 +9,7 @@ import (
 type Node struct {
 	ID      string
 	Address net.Addr
-	Peers   []net.Addr
+	Peers   map[string]net.Addr
 }
 
 func (n *Node) Start() {
@@ -44,6 +44,8 @@ func (n *Node) handleConnection(conn net.Conn) {
 
 	message := string(buffer[:nBytes])
 	fmt.Printf("Node %s: received message: %s\n", n.ID, message)
+
+	//process join  request
 }
 
 func (n *Node) SendMessage(peer net.Addr, message string) error {
