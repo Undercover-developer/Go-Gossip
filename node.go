@@ -166,17 +166,17 @@ func (n *Node) getGossipPeers(fanout int) []string {
 }
 
 func (n *Node) Gossip() {
+	fanout := 3
 	for {
 		time.Sleep(3 * time.Second)
 
 		if len(n.Peers) == 0 {
 			continue
 		}
-
 		message := fmt.Sprintf("Gossip from node %s", n.ID)
-
-		for _, peer := range n.Peers {
-			err := n.SendMessage(peer, message)
+		gossipPeers := n.getGossipPeers(fanout)
+		for _, peer := range gossipPeers {
+			err := n.SendMessage(n.Peers[peer], message)
 			if err != nil {
 				fmt.Printf("Node %s: error sending gossip to %s: %v\n", n.ID, peer, err)
 			}
