@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"maps"
+	"math/rand/v2"
 	"net"
 	"strings"
 	"time"
@@ -145,6 +146,23 @@ func (n *Node) JoinNetwork(bootstrap string) {
 			maps.Copy(n.Peers, newPeerList)
 		}
 	}
+}
+
+func (n *Node) getGossipPeers(fanout int) []string {
+	if fanout > len(n.Peers) {
+		fanout = len(n.Peers)
+	}
+
+	peerIDs := make([]string, len(n.Peers))
+	for id := range n.Peers {
+		peerIDs = append(peerIDs, id)
+	}
+
+	rand.Shuffle(len(peerIDs), func(i, j int) {
+		peerIDs[i], peerIDs[j] = peerIDs[j], peerIDs[i]
+	})
+
+	return peerIDs[:fanout]
 }
 
 func (n *Node) Gossip() {
