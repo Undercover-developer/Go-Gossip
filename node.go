@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -10,6 +11,19 @@ type Node struct {
 	ID      string
 	Address net.Addr
 	Peers   map[string]net.Addr
+}
+
+type Peer struct {
+	NetworkType string
+	Address     string
+}
+
+func (p *Peer) Network() string {
+	return p.NetworkType
+}
+
+func (p *Peer) String() string {
+	return p.Address
 }
 
 func (n *Node) Start() {
@@ -46,6 +60,10 @@ func (n *Node) handleConnection(conn net.Conn) {
 	fmt.Printf("Node %s: received message: %s\n", n.ID, message)
 
 	//process join  request
+	if strings.HasPrefix(message, "JOIN") {
+		// parts := strings.Split(message, " ")
+
+	}
 }
 
 func (n *Node) SendMessage(peer net.Addr, message string) error {
