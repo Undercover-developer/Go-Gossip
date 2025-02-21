@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"strings"
@@ -18,11 +20,11 @@ type Peer struct {
 	Address     string
 }
 
-func (p *Peer) Network() string {
+func (p Peer) Network() string {
 	return p.NetworkType
 }
 
-func (p *Peer) String() string {
+func (p Peer) String() string {
 	return p.Address
 }
 
@@ -61,8 +63,27 @@ func (n *Node) handleConnection(conn net.Conn) {
 
 	//process join  request
 	if strings.HasPrefix(message, "JOIN") {
-		// parts := strings.Split(message, " ")
+		parts := strings.Split(message, " ")
+		if len(parts) < 3 {
+			newPeer := Peer{
+				"tcp",
+				parts[2],
+			}
+			ID := parts[1]
+			if _, ok := n.Peers[ID]; !ok {
+				n.Peers[ID] = newPeer
+				fmt.Printf("Node %s added new peer %s \n", n.ID, newPeer.String())
+			}
+		}
 
+		var buf bytes.Buffer
+		enc := gob.NewEncoder(&buf)
+		err := enc.Encode(n.Peers)
+		if err != nil {
+			fmt.Printf("Node %s: error occurred while encoding peer list: %v", n.ID, err)
+		}
+		conn.Write(buf.Bytes())
+		return
 	}
 }
 
