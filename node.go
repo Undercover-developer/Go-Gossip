@@ -79,6 +79,7 @@ func (n *Node) handleConnection(conn net.Conn) {
 		}
 
 		var buf bytes.Buffer
+		gob.Register(&Peer{})
 		enc := gob.NewEncoder(&buf)
 		err := enc.Encode(n.Peers)
 		if err != nil {
@@ -129,22 +130,23 @@ func (n *Node) JoinNetwork(bootstrap string) {
 	}
 
 	message := string(buffer[:nBytes])
+	parts := strings.Split(message, " ")
 
 	//handle peers list update
-	if strings.HasPrefix(message, "PEERS") {
-		parts := strings.Split(message, " ")
-		if len(parts) < 2 {
-			b := []byte(parts[1])
-			reader := bytes.NewReader(b)
-			dec := gob.NewDecoder(reader)
-			var newPeerList map[string]net.Addr
-			err := dec.Decode(&newPeerList)
-			if err != nil {
-				fmt.Printf("Node %s: error occurred while decoding list of peers: %v \n", n.ID, err)
-			}
-
-			maps.Copy(n.Peers, newPeerList)
+	if parts[0] == "PEERS" && len(parts) < 3 {
+		b := []byte(parts[1])
+		reader := bytes.NewReader(b)
+		gob.Register(&Peer{})
+		dec := gob.NewDecoder(reader)
+		var newPeerList map[string]net.Addr
+		err := dec.Decode(&newPeerList)
+		if err != nil {
+			fmt.Printf("Node %s: error occurred while decoding list of peers: %v \n", n.ID, err)
 		}
+
+		maps.Copy(n.Peers, newPeerList)
+
+		fmt.Println(n.Peers)
 	}
 }
 
@@ -153,7 +155,7 @@ func (n *Node) getGossipPeers(fanout int) []string {
 		fanout = len(n.Peers)
 	}
 
-	peerIDs := make([]string, len(n.Peers))
+	peerIDs := make([]string, 0, len(n.Peers))
 	for id := range n.Peers {
 		peerIDs = append(peerIDs, id)
 	}
