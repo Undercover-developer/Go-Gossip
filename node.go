@@ -144,6 +144,7 @@ func (n *Node) JoinNetwork(bootstrap string) {
 			fmt.Printf("Node %s: error occurred while decoding list of peers: %v \n", n.ID, err)
 		}
 
+		delete(newPeerList, n.ID)
 		maps.Copy(n.Peers, newPeerList)
 
 		fmt.Println(n.Peers)
