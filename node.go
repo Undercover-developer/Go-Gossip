@@ -88,8 +88,12 @@ func (n *Node) handleConnection(conn net.Conn) {
 		prefix := []byte("PEERS ")
 		peerList := append(prefix, buf.Bytes()...)
 		conn.Write(peerList)
+		n.sendPEERJoinAlert(string(peerList))
 		return
 	}
+
+	parts := strings.Split(message, " ")
+	n.handleJoinMessage(parts)
 
 }
 
@@ -133,8 +137,13 @@ func (n *Node) JoinNetwork(bootstrap string) {
 	parts := strings.Split(message, " ")
 
 	//handle peers list update
-	if parts[0] == "PEERS" && len(parts) < 3 {
-		b := []byte(parts[1])
+	n.handleJoinMessage(parts)
+
+}
+
+func (n *Node) handleJoinMessage(messageParts []string) {
+	if messageParts[0] == "PEERS" && len(messageParts) < 3 {
+		b := []byte(messageParts[1])
 		reader := bytes.NewReader(b)
 		gob.Register(&Peer{})
 		dec := gob.NewDecoder(reader)
@@ -147,7 +156,16 @@ func (n *Node) JoinNetwork(bootstrap string) {
 		delete(newPeerList, n.ID)
 		maps.Copy(n.Peers, newPeerList)
 
-		fmt.Println(n.Peers)
+		fmt.Printf("new peers: %v \n", n.Peers)
+	}
+}
+
+func (n *Node) sendPEERJoinAlert(message string) {
+	for _, peer := range n.Peers {
+		err := n.SendMessage(peer, message)
+		if err != nil {
+			fmt.Printf("Node %s: error sending join alert to %s: %v\n", n.ID, peer.String(), err)
+		}
 	}
 }
 
