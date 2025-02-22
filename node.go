@@ -107,7 +107,7 @@ func (n *Node) SendMessage(peer net.Addr, message string) error {
 }
 
 func (n *Node) JoinNetwork(bootstrap string) {
-	joinMessage := fmt.Sprintf("JOIN %s", n.Address)
+	joinMessage := fmt.Sprintf("JOIN %s %s", n.ID, n.Address)
 	peer := Peer{
 		"tcp",
 		bootstrap,
@@ -165,8 +165,7 @@ func (n *Node) getGossipPeers(fanout int) []string {
 	return peerIDs[:fanout]
 }
 
-func (n *Node) Gossip() {
-	fanout := 3
+func (n *Node) Gossip(fanout int) {
 	for {
 		time.Sleep(3 * time.Second)
 
