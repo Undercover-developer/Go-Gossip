@@ -66,7 +66,7 @@ func (n *Node) handleConnection(conn net.Conn) {
 	//process join  request
 	if strings.HasPrefix(message, "JOIN") {
 		parts := strings.Split(message, " ")
-		if len(parts) < 3 {
+		if len(parts) < 4 {
 			newPeer := Peer{
 				"tcp",
 				parts[2],
@@ -84,7 +84,7 @@ func (n *Node) handleConnection(conn net.Conn) {
 		if err != nil {
 			fmt.Printf("Node %s: error occurred while encoding peer list: %v", n.ID, err)
 		}
-		prefix := []byte("JOIN")
+		prefix := []byte("PEERS ")
 		peerList := append(prefix, buf.Bytes()...)
 		conn.Write(peerList)
 		return
